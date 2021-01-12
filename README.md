@@ -1,6 +1,6 @@
 # 🔥 ssrf-king 🔥
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-### v1.0
+### v1.1 Latest
 SSRF plugin for burp that Automates SSRF Detection in all of the Request
 
 ![alt text](https://image.flaticon.com/icons/png/128/1320/1320457.png)
