@@ -5,6 +5,11 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
 
 ![alt text](https://image.flaticon.com/icons/png/128/1320/1320457.png)
 
+### Upcoming Features Checklist
+* It will soon have a user Interface to specifiy your own call back payload
+* It will soon be able to test Json & XML
+
+
 ### Features
 
 * ✔️ Test all of the request for any external interactions.
