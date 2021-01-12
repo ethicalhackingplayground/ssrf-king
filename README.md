@@ -20,6 +20,9 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
 
 Works only with
 * JDK 11
+* Burp Professional
+
+Tested with Burp Professional v2020.11.2
 
 ### Process to Use it.
 
