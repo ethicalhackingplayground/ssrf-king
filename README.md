@@ -5,10 +5,15 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
 
 ![alt text](https://image.flaticon.com/icons/png/128/1320/1320457.png)
 
+
+**If you are facing any problems or would like any new features not listed Below**
+**Please create a new issue below in the form**
+
+**[Create New Issue](https://github.com/ethicalhackingplayground/ssrf-king/issues/new)**
+
 ### Upcoming Features Checklist
 * It will soon have a user Interface to specifiy your own call back payload
 * It will soon be able to test Json & XML
-
 
 ### Features
 
