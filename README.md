@@ -1,4 +1,5 @@
 # 🔥 ssrf-king 🔥
+### v1.0
 SSRF plugin for burp that Automates SSRF Detection in all of the Request
 
 ![alt text](https://image.flaticon.com/icons/png/128/1320/1320457.png)
