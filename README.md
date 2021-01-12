@@ -12,6 +12,7 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
 * ✔️ Alerts the user for any external interactions with information such as:
   - Endpoint Vulnerable
   - Host
+  - Location Found
   
 ### Scanning Options
 
