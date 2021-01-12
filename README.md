@@ -6,7 +6,7 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
 ![alt text](https://image.flaticon.com/icons/png/128/1320/1320457.png)
 
 
-**If you are facing any problems or would like any new features not listed Below**
+**If you are facing any problems or would like a new feature that is not listed below**
 **Please create a new issue below in the form**
 
 **[Create New Issue](https://github.com/ethicalhackingplayground/ssrf-king/issues/new)**
