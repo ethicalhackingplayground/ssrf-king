@@ -73,7 +73,9 @@ Works only with
 
 Tested with Burp Professional v2020.11.2
 
-### Process to Use it.
+**SSRF-King will soon be avaiable for all version of burp professional soon**
+
+### Example
 
 * Load the website you want to test.
 
@@ -105,6 +107,8 @@ Tested with Burp Professional v2020.11.2
 ![GitHub Logo](ssrf-7.PNG)
 
 
+### Video Demonstration
+#### Coming soon
 
 **If you get a bounty please support by buying me a coffee**
 
