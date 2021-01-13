@@ -24,6 +24,42 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
   - Host
   - Location Found
   
+It also performs the following tests based on this research:
+Reference:
+
+https://portswigger.net/research/cracking-the-lens-targeting-https-hidden-attack-surface
+
+```http
+GET http://burpcollab/some/endpoint HTTP/1.1
+Host: example.com
+...
+and
+```
+```http
+GET @burpcollab/some/endpoint HTTP/1.1
+Host: example.com
+...
+```
+and
+```http
+GET /some/endpoint HTTP/1.1
+Host: example.com:80@burpcollab
+...
+```
+and
+```http
+GET /some/endpoint HTTP/1.1
+Host: burpcollab
+...
+```
+and
+```http
+GET /some/endpoint HTTP/1.1
+Host: example.com
+X-Forwarded-Host: burpcollab
+...
+```
+
 ### Scanning Options
 
 * ✔️ Supports Both Passive & Active Scanning.
