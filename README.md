@@ -25,7 +25,8 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
   - Location Found
   
 It also performs the following tests based on this research:
-Reference:
+
+**Reference:**
 
 https://portswigger.net/research/cracking-the-lens-targeting-https-hidden-attack-surface
 
