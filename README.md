@@ -34,8 +34,8 @@ https://portswigger.net/research/cracking-the-lens-targeting-https-hidden-attack
 GET http://burpcollab/some/endpoint HTTP/1.1
 Host: example.com
 ...
-and
 ```
+and
 ```http
 GET @burpcollab/some/endpoint HTTP/1.1
 Host: example.com
