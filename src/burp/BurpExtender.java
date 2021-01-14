@@ -28,16 +28,15 @@ import java.util.List;
  * @author User
  *
  */
-public class BurpExtender implements IBurpExtender, IExtensionStateListener, IScannerCheck, TextListener,ItemListener {
+public class BurpExtender implements IBurpExtender, IExtensionStateListener, IScannerCheck  {
     private IBurpCollaboratorClientContext context;
     private PrintWriter stdout;
     public IBurpExtenderCallbacks callback;
 	public IExtensionHelpers helpers;
 	public String payload;
-	public TextField textField;
 	private HashSet<String> client_ips;
-	boolean isHttp = false;
-	Checkbox check;
+	public CustomTabUI Ui;
+
 	
 	
 	
@@ -63,37 +62,15 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
         
         client_ips=GetUserIP();
 
-        Panel panel = new Panel();
-        textField = new TextField();
-        textField.addTextListener(this);
-        textField.setText(payload);
-        Label label = new Label();
-        label.setText("Payload:");
-        Label httpLabel = new Label();
-        httpLabel.setText("IsHttp:");
-        check = new Checkbox();
-        isHttp = check.getState();
-        check.addItemListener(this);
-        panel.add(label);
-        panel.add(textField);
-        panel.add(httpLabel);
-        panel.add(check);
-        CustomTab tab = new CustomTab("SSRF-King", panel);
+       
+        // Create a new User Interface Object
+        Ui = new CustomTabUI();
+        Ui.SetPayloadUI(payload);
+        Ui.CreateUI();
+        
+        CustomTab tab = new CustomTab("SSRF-King", Ui.GetUI());
         callbacks.addSuiteTab(tab);
     }
-    
-	@Override
-	public void textValueChanged(TextEvent e) {
-		this.payload = textField.getText();
-		
-	}
-	
-	@Override
-	public void itemStateChanged(ItemEvent arg0) {
-		isHttp = check.getState();
-		
-	}
-
 
 	@Override
 	public void extensionUnloaded() {
@@ -175,7 +152,8 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		// Test cases for a "GET" request
 		if (reqInfo.getMethod().equals("GET")) {
 			RunTestOnParameters("GET", issues, reqInfo,  content, request, service, IParameter.PARAM_URL);
-			RunTestOnXForwarded("GET", issues, reqInfo, content, service);
+			RunTestOnXForwardedFor("GET", issues, reqInfo, content, service);
+			RunTestOnXForwardedHost("GET", issues, reqInfo, content, service);
 			RunTestOnHostHeader("GET", issues, reqInfo, content, service);
 			RunTestInUserAgent("GET", issues, reqInfo, content, service);
 			RunTestInPath("GET", issues, reqInfo, content, service);
@@ -185,7 +163,8 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		// Test cases for a "POST" request
 		if (reqInfo.getMethod().equals("POST")) {
 			RunTestOnParameters("POST", issues, reqInfo, content, request, service, IParameter.PARAM_BODY);
-			RunTestOnXForwarded("POST", issues, reqInfo, content, service);
+			RunTestOnXForwardedFor("POST", issues, reqInfo, content, service);
+			RunTestOnXForwardedHost("POST", issues, reqInfo, content, service);
 			RunTestOnHostHeader("POST", issues, reqInfo, content, service);
 			RunTestInUserAgent("POST", issues, reqInfo, content, service);
 			RunTestInPath("POST", issues, reqInfo, content, service);
@@ -224,7 +203,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			
 			// Build the request and update each part of the request with the Payload
 			IParameter newParam;
-			if (this.isHttp) {
+			if (Ui.isHttp) {
 		       	newParam = helpers.buildParameter(param.getName(), "http://"+payload, paramType);
 			}else {
 		       	newParam = helpers.buildParameter(param.getName(), "https://"+payload, paramType);
@@ -281,7 +260,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 	 * @param content
 	 * @param service
 	 */
-	public void RunTestOnXForwarded(String method,
+	public void RunTestOnXForwardedHost(String method,
 			List<IScanIssue> issues, 
 			IRequestInfo reqInfo, 
 			IHttpRequestResponse content, 
@@ -322,6 +301,64 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 				stdout.println("Method: " + method);
 					         
 				String title="X-Forwarded-Host Based SSRF";
+				String message="<br>Method: <b>"  + method + "\n</b><br>EndPoint: <b>" + path + "\n</b><br>\nLocation: <b>X-Forwarded-Host</b>\n";
+				CustomScanIssue issue=new CustomScanIssue(service, url, new IHttpRequestResponse[]{content} , title, message, "High", "Certain", "Panic");
+				issues.add(issue);
+					        	
+				callback.addScanIssue(issue);
+			}
+		}
+	}
+	
+	/***
+	 * Override the X-Forwarded-For header to test for SSRF
+	 * @param method
+	 * @param issues
+	 * @param reqInfo
+	 * @param content
+	 * @param service
+	 */
+	public void RunTestOnXForwardedFor(String method,
+			List<IScanIssue> issues, 
+			IRequestInfo reqInfo, 
+			IHttpRequestResponse content, 
+			IHttpService service) {
+		
+		URL url = helpers.analyzeRequest(content).getUrl();
+		String path = reqInfo.getHeaders().get(0);
+		String host = reqInfo.getHeaders().get(1);
+		List<String> headers = reqInfo.getHeaders();
+		headers.add("X-Forwarded-For: " + payload);
+		byte[] request = helpers.buildHttpMessage(headers, null);
+				             	
+			
+		callback.makeHttpRequest(content.getHttpService(), request);
+		for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
+			String client_ip = interaction.getProperty("client_ip");
+				        	
+			if (client_ips.contains(client_ip)) {
+				stdout.println("Open Redirect Found");
+			    stdout.println("IP: " + client_ip);
+				stdout.println("Host: " + host);
+				stdout.println("Path: " + path);
+				stdout.println("Method: " + method);
+					        	
+				String title="Url Redirection";
+				String message="<br>EndPoint:<b> " + path + "<br>\n";
+				CustomScanIssue issue=new CustomScanIssue(service, url, new IHttpRequestResponse[]{content} , title, message, "Low", "Certain", "Panic");
+				issues.add(issue);
+					        	
+				callback.addScanIssue(issue);
+					        	
+			}else {
+				        	
+				stdout.println("Found SSRF");
+				stdout.println("IP: " + client_ip);
+				stdout.println("Host: " + host);
+				stdout.println("Path: " + path);
+				stdout.println("Method: " + method);
+					         
+				String title="X-Forwarded-For Based SSRF";
 				String message="<br>Method: <b>"  + method + "\n</b><br>EndPoint: <b>" + path + "\n</b><br>\nLocation: <b>X-Forwarded-For</b>\n";
 				CustomScanIssue issue=new CustomScanIssue(service, url, new IHttpRequestResponse[]{content} , title, message, "High", "Certain", "Panic");
 				issues.add(issue);
@@ -528,7 +565,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		List<String> headers = reqInfo.getHeaders();
 		for (int i = 0; i < headers.size(); i++) {
 			if (headers.get(i).contains("Referer")) {
-				if (this.isHttp) {
+				if (Ui.isHttp) {
 					headers.set(i, "Referer: " + "http://"+payload);	
 				}else {
 					headers.set(i, "Referer: " + "https://"+payload);
@@ -539,7 +576,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		}
 		
 		if (foundHeader == false) {
-			if (this.isHttp) {
+			if (Ui.isHttp) {
 				headers.add("Referer: " + "http://"+payload);	
 			}else {
 				headers.add("Referer: " + "https://"+payload);	
@@ -617,7 +654,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		
 		String[] pathParts2 = path.split(" ");
 		String newPath2;
-		if (this.isHttp) {
+		if (Ui.isHttp) {
 			newPath2 = method + " " + "http://"+payload+pathParts2[1] + " HTTP/1.1";	
 		}else {
 			newPath2 = method + " " + "https://"+payload+pathParts2[1] + " HTTP/1.1";	
@@ -765,6 +802,64 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 	    public String getProtocol() {
 	        return null;
 	    }
+	}
+	
+	// The Custom Tab UI
+	public class CustomTabUI implements TextListener,ItemListener {
+		public boolean isHttp = false;
+		public Checkbox check;
+		public TextField textField;
+		public Panel panel;
+		public String payload;
+		
+		
+		public void SetPayloadUI (String thispayload) {
+			payload= thispayload;
+		}
+		
+		
+		/***
+		 * Create the User Interface
+		 */
+		public void CreateUI () {
+			panel = new Panel();
+		    textField = new TextField();
+		    textField.addTextListener(this);
+		    textField.setText(payload);
+		    Label label = new Label();
+		    label.setText("Payload:");
+		    Label httpLabel = new Label();
+		    httpLabel.setText("IsHttp:");
+		    check = new Checkbox();
+		    isHttp = check.getState();
+		    check.addItemListener(this);
+		    panel.add(label);
+		    panel.add(textField);
+		    panel.add(httpLabel);
+		    panel.add(check);
+		}
+		
+		
+		/***
+		 * Get the User Interface
+		 * @return
+		 */
+		public Component GetUI () {
+			return panel;
+		}
+		
+		@Override
+		public void textValueChanged(TextEvent e) {
+			this.payload = textField.getText();
+			
+		}
+		
+		@Override
+		public void itemStateChanged(ItemEvent arg0) {
+			isHttp = check.getState();
+			
+		}
+
 	}
 	
 	// Custom Tab Class
