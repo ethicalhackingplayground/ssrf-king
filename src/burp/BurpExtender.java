@@ -7,10 +7,13 @@
 
 package burp;
 
+import java.awt.Checkbox;
 import java.awt.Component;
 import java.awt.Label;
 import java.awt.Panel;
 import java.awt.TextField;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.TextEvent;
 import java.awt.event.TextListener;
 import java.io.PrintWriter;
@@ -25,7 +28,7 @@ import java.util.List;
  * @author User
  *
  */
-public class BurpExtender implements IBurpExtender, IExtensionStateListener, IScannerCheck, TextListener {
+public class BurpExtender implements IBurpExtender, IExtensionStateListener, IScannerCheck, TextListener,ItemListener {
     private IBurpCollaboratorClientContext context;
     private PrintWriter stdout;
     public IBurpExtenderCallbacks callback;
@@ -33,6 +36,8 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 	public String payload;
 	public TextField textField;
 	private HashSet<String> client_ips;
+	boolean isHttp = false;
+	Checkbox check;
 	
 	
 	
@@ -64,8 +69,15 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
         textField.setText(payload);
         Label label = new Label();
         label.setText("Payload:");
+        Label httpLabel = new Label();
+        httpLabel.setText("IsHttp:");
+        check = new Checkbox();
+        isHttp = check.getState();
+        check.addItemListener(this);
         panel.add(label);
         panel.add(textField);
+        panel.add(httpLabel);
+        panel.add(check);
         CustomTab tab = new CustomTab("SSRF-King", panel);
         callbacks.addSuiteTab(tab);
     }
@@ -76,7 +88,13 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		this.payload = textField.getText();
 		
 	}
-   
+	
+	@Override
+	public void itemStateChanged(ItemEvent arg0) {
+		// TODO Auto-generated method stub
+		isHttp = check.getState();
+		
+	}
 
 
 	@Override
@@ -212,7 +230,13 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			IParameter param = params.get(i);
 			
 			// Build the request and update each part of the request with the Payload
-	       	IParameter newParam = helpers.buildParameter(param.getName(), "http://"+payload, paramType);
+			IParameter newParam;
+			if (this.isHttp) {
+		       	newParam = helpers.buildParameter(param.getName(), "http://"+payload, paramType);
+			}else {
+		       	newParam = helpers.buildParameter(param.getName(), "https://"+payload, paramType);
+			}
+
 			if(param.getType() != IParameter.PARAM_COOKIE && !param.getName().contains("_csrf")) {
 				request = helpers.updateParameter(request, newParam);
 			             	
@@ -511,14 +535,22 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		List<String> headers = reqInfo.getHeaders();
 		for (int i = 0; i < headers.size(); i++) {
 			if (headers.get(i).contains("Referer")) {
-				headers.set(i, "Referer: " + "https://"+payload);
+				if (this.isHttp) {
+					headers.set(i, "Referer: " + "http://"+payload);	
+				}else {
+					headers.set(i, "Referer: " + "https://"+payload);
+				}
 				foundHeader=true;
 				break;
 			}
 		}
 		
 		if (foundHeader == false) {
-			headers.add("Referer: " + "https://"+payload);
+			if (this.isHttp) {
+				headers.add("Referer: " + "http://"+payload);	
+			}else {
+				headers.add("Referer: " + "https://"+payload);	
+			}
 		}
 		
 		byte[] request = helpers.buildHttpMessage(headers, null);
@@ -591,7 +623,12 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		
 		
 		String[] pathParts2 = path.split(" ");
-		String newPath2 = method + " " + "https://"+payload+pathParts2[1] + " HTTP/1.1";
+		String newPath2;
+		if (this.isHttp) {
+			newPath2 = method + " " + "http://"+payload+pathParts2[1] + " HTTP/1.1";	
+		}else {
+			newPath2 = method + " " + "https://"+payload+pathParts2[1] + " HTTP/1.1";	
+		}
 		headers2.set(0, newPath2);
 		
 		byte[] request = helpers.buildHttpMessage(headers2, null);
