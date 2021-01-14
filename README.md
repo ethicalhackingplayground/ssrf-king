@@ -7,7 +7,7 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
 
 
 **If you are facing any problems or would like a new feature that is not listed below**
-**Please create a new issue below in the form**
+**Please create a new issue below in this form**
 
 **[Create New Issue](https://github.com/ethicalhackingplayground/ssrf-king/issues/new)**
 
@@ -65,46 +65,36 @@ X-Forwarded-Host: burpcollab
 
 * ✔️ Supports Both Passive & Active Scanning.
 
-### Dependencies
-
-Works only with
-* JDK 11
-* Burp Professional
-
-Tested with Burp Professional v2020.11.2
-
-**SSRF-King will soon be avaiable for all version of burp professional soon**
-
 ### Example
 
 * Load the website you want to test.
 
-![GitHub Logo](ss-1.PNG)
+![GitHub Logo](Pictures/ss-1.PNG)
 
 * Add it as an inscope host in burp.
 
-![GitHub Logo](ss-2.PNG)
+![GitHub Logo](Pictures/ss-2.PNG)
 
 * Load the plugin.
 
-![GitHub Logo](ss-3.PNG)
+![GitHub Logo](Pictures/ss-3.PNG)
 
 * Keep note of the Burp Collab Payload.
 
-![GitHub Logo](ss-4.PNG)
+![GitHub Logo](Pictures/ss-4.PNG)
 
 * Passively crawl the page, ssrf-king test everything in the request on the fly.
 
-![GitHub Logo](ssf-5.PNG)
+![GitHub Logo](Pictures/ssf-5.PNG)
 
 * When it finds a vulnerabilitiy it logs the information and adds an alert.
 
-![GitHub Logo](ssrf-6.PNG)
+![GitHub Logo](Pictures/ssrf-6.PNG)
 
 
 **From here onwards you would fuzz the parameter to test for SSRF.**
 
-![GitHub Logo](ssrf-7.PNG)
+![GitHub Logo](Pictures/ssrf-7.PNG)
 
 
 ### Video Demonstration
