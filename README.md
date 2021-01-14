@@ -7,7 +7,7 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
 
 
 **If you are facing any problems or would like a new feature that is not listed below**
-**Please create a new issue below in the form**
+**Please create a new issue below in this form**
 
 **[Create New Issue](https://github.com/ethicalhackingplayground/ssrf-king/issues/new)**
 
