@@ -163,7 +163,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		
 		// Test cases for a "GET" request
 		if (reqInfo.getMethod().equals("GET")) {
-			RunTestOnParameters("GET", issues, reqInfo,  content, request, service);
+			RunTestOnParameters("GET", issues, reqInfo,  content, request, service, IParameter.PARAM_URL);
 			RunTestOnXForwarded("GET", issues, reqInfo, content, service);
 			RunTestOnHostHeader("GET", issues, reqInfo, content, service);
 			RunTestInUserAgent("GET", issues, reqInfo, content, service);
@@ -173,7 +173,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		
 		// Test cases for a "POST" request
 		if (reqInfo.getMethod().equals("POST")) {
-			RunTestOnParameters("POST", issues, reqInfo, content, request, service);
+			RunTestOnParameters("POST", issues, reqInfo, content, request, service, IParameter.PARAM_BODY);
 			RunTestOnXForwarded("POST", issues, reqInfo, content, service);
 			RunTestOnHostHeader("POST", issues, reqInfo, content, service);
 			RunTestInUserAgent("POST", issues, reqInfo, content, service);
@@ -184,34 +184,35 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 	
 	
 	/***
-	 * Run SSRF tests on Parameters.
+	 *  Run SSRF tests on Parameters.
 	 * @param method
 	 * @param issues
 	 * @param reqInfo
 	 * @param content
 	 * @param request
 	 * @param service
+	 * @param paramType
 	 */
 	public void RunTestOnParameters(String method, 
 			List<IScanIssue> issues, 
 			IRequestInfo reqInfo, 
 			IHttpRequestResponse content, 
 			byte[] request,
-			IHttpService service) {
+			IHttpService service,
+			byte paramType) {
 	
 		
 		URL url = helpers.analyzeRequest(content).getUrl();
 		String path = reqInfo.getHeaders().get(0);
 		String host = reqInfo.getHeaders().get(1);
 		List<IParameter> params = reqInfo.getParameters();
-		byte paramType = IParameter.PARAM_URL;
 		
 		// Fetch all parameters and inject our Payload.
 		for(int i=0; i < params.size(); i++) {
 			IParameter param = params.get(i);
 			
 			// Build the request and update each part of the request with the Payload
-	       	IParameter newParam = helpers.buildParameter(param.getName(), payload, paramType);
+	       	IParameter newParam = helpers.buildParameter(param.getName(), "http://"+payload, paramType);
 			if(param.getType() != IParameter.PARAM_COOKIE && !param.getName().contains("_csrf")) {
 				request = helpers.updateParameter(request, newParam);
 			             	
