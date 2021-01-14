@@ -152,7 +152,6 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		// Test cases for a "GET" request
 		if (reqInfo.getMethod().equals("GET")) {
 			RunTestOnParameters("GET", issues, reqInfo,  content, request, service, IParameter.PARAM_URL);
-			RunTestOnXForwardedFor("GET", issues, reqInfo, content, service);
 			RunTestOnXForwardedHost("GET", issues, reqInfo, content, service);
 			RunTestOnHostHeader("GET", issues, reqInfo, content, service);
 			RunTestInUserAgent("GET", issues, reqInfo, content, service);
@@ -163,7 +162,6 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		// Test cases for a "POST" request
 		if (reqInfo.getMethod().equals("POST")) {
 			RunTestOnParameters("POST", issues, reqInfo, content, request, service, IParameter.PARAM_BODY);
-			RunTestOnXForwardedFor("POST", issues, reqInfo, content, service);
 			RunTestOnXForwardedHost("POST", issues, reqInfo, content, service);
 			RunTestOnHostHeader("POST", issues, reqInfo, content, service);
 			RunTestInUserAgent("POST", issues, reqInfo, content, service);
@@ -190,6 +188,9 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			byte[] request,
 			IHttpService service,
 			byte paramType) {
+		
+	    payload=context.generatePayload(true);
+	    Ui.SetPayloadUI(payload);
 	
 		
 		URL url = helpers.analyzeRequest(content).getUrl();
@@ -214,7 +215,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			             	
 		
 				callback.makeHttpRequest(content.getHttpService(), request);
-			    for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
+			    for(IBurpCollaboratorInteraction interaction : context.fetchCollaboratorInteractionsFor(payload)) {
 			    	 String client_ip = interaction.getProperty("client_ip");
 			        	
 			    	 if (client_ips.contains(client_ip)) {
@@ -246,7 +247,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 				        	
 				         callback.addScanIssue(issue);
 			    	 }
-			    }    
+			    }   
 			}
 		}
 	}
@@ -266,6 +267,9 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			IHttpRequestResponse content, 
 			IHttpService service) {
 		
+		payload=context.generatePayload(true);
+		Ui.SetPayloadUI(payload);
+		
 		URL url = helpers.analyzeRequest(content).getUrl();
 		String path = reqInfo.getHeaders().get(0);
 		String host = reqInfo.getHeaders().get(1);
@@ -275,7 +279,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 				             	
 			
 		callback.makeHttpRequest(content.getHttpService(), request);
-		for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
+		for(IBurpCollaboratorInteraction interaction : context.fetchCollaboratorInteractionsFor(payload)) {
 			String client_ip = interaction.getProperty("client_ip");
 				        	
 			if (client_ips.contains(client_ip)) {
@@ -309,65 +313,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			}
 		}
 	}
-	
-	/***
-	 * Override the X-Forwarded-For header to test for SSRF
-	 * @param method
-	 * @param issues
-	 * @param reqInfo
-	 * @param content
-	 * @param service
-	 */
-	public void RunTestOnXForwardedFor(String method,
-			List<IScanIssue> issues, 
-			IRequestInfo reqInfo, 
-			IHttpRequestResponse content, 
-			IHttpService service) {
-		
-		URL url = helpers.analyzeRequest(content).getUrl();
-		String path = reqInfo.getHeaders().get(0);
-		String host = reqInfo.getHeaders().get(1);
-		List<String> headers = reqInfo.getHeaders();
-		headers.add("X-Forwarded-For: " + payload);
-		byte[] request = helpers.buildHttpMessage(headers, null);
-				             	
-			
-		callback.makeHttpRequest(content.getHttpService(), request);
-		for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
-			String client_ip = interaction.getProperty("client_ip");
-				        	
-			if (client_ips.contains(client_ip)) {
-				stdout.println("Open Redirect Found");
-			    stdout.println("IP: " + client_ip);
-				stdout.println("Host: " + host);
-				stdout.println("Path: " + path);
-				stdout.println("Method: " + method);
-					        	
-				String title="Url Redirection";
-				String message="<br>EndPoint:<b> " + path + "<br>\n";
-				CustomScanIssue issue=new CustomScanIssue(service, url, new IHttpRequestResponse[]{content} , title, message, "Low", "Certain", "Panic");
-				issues.add(issue);
-					        	
-				callback.addScanIssue(issue);
-					        	
-			}else {
-				        	
-				stdout.println("Found SSRF");
-				stdout.println("IP: " + client_ip);
-				stdout.println("Host: " + host);
-				stdout.println("Path: " + path);
-				stdout.println("Method: " + method);
-					         
-				String title="X-Forwarded-For Based SSRF";
-				String message="<br>Method: <b>"  + method + "\n</b><br>EndPoint: <b>" + path + "\n</b><br>\nLocation: <b>X-Forwarded-For</b>\n";
-				CustomScanIssue issue=new CustomScanIssue(service, url, new IHttpRequestResponse[]{content} , title, message, "High", "Certain", "Panic");
-				issues.add(issue);
-					        	
-				callback.addScanIssue(issue);
-			}
-		}
-	}
-	
+
 	
 	/***
 	 * Run Tests against the Host Header to see if there are any routing issues.
@@ -383,6 +329,9 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			IHttpRequestResponse content, 
 			IHttpService service) {
 		
+		payload=context.generatePayload(true);
+		Ui.SetPayloadUI(payload);
+		
 		URL url = helpers.analyzeRequest(content).getUrl();
 		String path = reqInfo.getHeaders().get(0);
 		String host = reqInfo.getHeaders().get(1);
@@ -392,7 +341,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 				             	
 		byte[] request = helpers.buildHttpMessage(headers, null);
 		callback.makeHttpRequest(content.getHttpService(), request);
-		for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
+		for(IBurpCollaboratorInteraction interaction : context.fetchCollaboratorInteractionsFor(payload)) {
 			String client_ip = interaction.getProperty("client_ip");
 				        	
 			if (client_ips.contains(client_ip)) {
@@ -426,13 +375,16 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			}
 		}
 		
+		payload=context.generatePayload(true);
+		Ui.SetPayloadUI(payload);
+		
 		String[] hostValue = host.split(" ");
 		List<String> headers2 = reqInfo.getHeaders();
 		headers2.set(1, "Host: " + hostValue[1] + "@" + payload);
 				             	
 		byte[] request2 = helpers.buildHttpMessage(headers2, null);
 		callback.makeHttpRequest(content.getHttpService(), request2);
-		for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
+		for(IBurpCollaboratorInteraction interaction : context.fetchCollaboratorInteractionsFor(payload)) {
 			String client_ip = interaction.getProperty("client_ip");
 				        	
 			if (client_ips.contains(client_ip)) {
@@ -482,6 +434,9 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			IHttpRequestResponse content, 
 			IHttpService service) {
 		
+		payload=context.generatePayload(true);
+		Ui.SetPayloadUI(payload);
+		
 		URL url = helpers.analyzeRequest(content).getUrl();
 		String path = reqInfo.getHeaders().get(0);
 		String host = reqInfo.getHeaders().get(1);
@@ -503,7 +458,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 				             	
 		byte[] request = helpers.buildHttpMessage(headers, null);
 		callback.makeHttpRequest(content.getHttpService(), request);
-		for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
+		for(IBurpCollaboratorInteraction interaction : context.fetchCollaboratorInteractionsFor(payload)) {
 			String client_ip = interaction.getProperty("client_ip");
 				        	
 			if (client_ips.contains(client_ip)) {
@@ -556,6 +511,10 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			IHttpRequestResponse content, 
 			IHttpService service) {
 		
+		
+		payload=context.generatePayload(true);
+		Ui.SetPayloadUI(payload);
+		
 		URL url = helpers.analyzeRequest(content).getUrl();
 		String path = reqInfo.getHeaders().get(0);
 		String host = reqInfo.getHeaders().get(1);
@@ -587,7 +546,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		
 		
 		callback.makeHttpRequest(content.getHttpService(), request);
-		for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
+		for(IBurpCollaboratorInteraction interaction : context.fetchCollaboratorInteractionsFor(payload)) {
 			String client_ip = interaction.getProperty("client_ip");
 				        	
 			if (client_ips.contains(client_ip)) {
@@ -637,6 +596,9 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			IHttpRequestResponse content, 
 			IHttpService service) {
 		
+		payload=context.generatePayload(true);
+		Ui.SetPayloadUI(payload);
+		
 		URL url = helpers.analyzeRequest(content).getUrl();
 		String path = reqInfo.getHeaders().get(0);
 		String host = reqInfo.getHeaders().get(1);
@@ -664,7 +626,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		byte[] request = helpers.buildHttpMessage(headers2, null);
 		callback.makeHttpRequest(content.getHttpService(), request); 
 		
-		for(IBurpCollaboratorInteraction interaction : context.fetchAllCollaboratorInteractions()) {
+		for(IBurpCollaboratorInteraction interaction : context.fetchCollaboratorInteractionsFor(payload)) {
 			String client_ip = interaction.getProperty("client_ip");
 				        	
 			if (client_ips.contains(client_ip)) {
