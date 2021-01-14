@@ -65,16 +65,6 @@ X-Forwarded-Host: burpcollab
 
 * ✔️ Supports Both Passive & Active Scanning.
 
-### Dependencies
-
-Works only with
-* JDK 11
-* Burp Professional
-
-Tested with Burp Professional v2020.11.2
-
-**SSRF-King will soon be avaiable for all version of burp professional soon**
-
 ### Example
 
 * Load the website you want to test.
