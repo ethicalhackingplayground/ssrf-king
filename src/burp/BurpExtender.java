@@ -84,14 +84,12 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
     
 	@Override
 	public void textValueChanged(TextEvent e) {
-		// TODO Auto-generated method stub
 		this.payload = textField.getText();
 		
 	}
 	
 	@Override
 	public void itemStateChanged(ItemEvent arg0) {
-		// TODO Auto-generated method stub
 		isHttp = check.getState();
 		
 	}
@@ -99,20 +97,17 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 
 	@Override
 	public void extensionUnloaded() {
-		// TODO Auto-generated method stub
 		stdout.println("Finished..");
 	}
     
 
 	@Override
 	public int consolidateDuplicateIssues(IScanIssue arg0, IScanIssue arg1) {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public List<IScanIssue> doActiveScan(IHttpRequestResponse arg0, IScannerInsertionPoint arg1) {
-		// TODO Auto-generated method stub
 		List<IScanIssue> issues = new ArrayList<IScanIssue>();
 		return issues;
 	}
@@ -173,8 +168,6 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 	 */
 	public void RunDetectionAnalysis(IHttpRequestResponse content, List<IScanIssue> issues) {
 		
-		
-		// TODO Auto-generated method stub
 		byte[] request = content.getRequest();
 		IHttpService service = content.getHttpService();
 		IRequestInfo reqInfo = helpers.analyzeRequest(request);
@@ -396,7 +389,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 			}
 		}
 		
-		var hostValue = host.split(" ");
+		String[] hostValue = host.split(" ");
 		List<String> headers2 = reqInfo.getHeaders();
 		headers2.set(1, "Host: " + hostValue[1] + "@" + payload);
 				             	
@@ -459,7 +452,7 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		boolean foundHeader = false;
 		
 		List<String> headers = reqInfo.getHeaders();
-		for (var i = 0; i < headers.size(); i++) {
+		for (int i = 0; i < headers.size(); i++) {
 			if (headers.get(i).contains("User-Agent")) {
 				headers.set(i, "User-Agent: " + payload);
 				foundHeader=true;
@@ -774,11 +767,13 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 	    }
 	}
 	
+	// Custom Tab Class
 	public class CustomTab implements ITab {
 
 		public Component component;
 		public String tabCaption;
 		
+		// Constructor
 		public CustomTab (String _tabCaption, Component _component) {
 			this.tabCaption = _tabCaption;
 			this.component = _component;
@@ -786,14 +781,12 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, ISc
 		
 		@Override
 		public String getTabCaption() {
-			// TODO Auto-generated method stub
 			this.tabCaption = "SSRF-King";
 			return this.tabCaption;
 		}
 
 		@Override
 		public Component getUiComponent() {
-			// TODO Auto-generated method stub
 			return this.component;
 		}
 		
