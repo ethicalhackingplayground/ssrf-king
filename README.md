@@ -16,7 +16,7 @@ SSRF plugin for burp that Automates SSRF Detection in all of the Request
 * It will soon be able to test Json & XML
 
 ### How to Install/Build
-* ``` git clonenhttps://github.com/ethicalhackingplayground/ssrf-king ```
+* ``` git clone https://github.com/ethicalhackingplayground/ssrf-king ```
 * ``` gradle build ```
 * Now the file "ssrf-king.jar" could be found under build/libs which can then be imported Burpsuite. 
 * Alternatively, goto [releases](https://github.com/ethicalhackingplayground/ssrf-king/releases) to download the compiled file.
